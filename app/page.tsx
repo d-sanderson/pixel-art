@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import usePartySocket from "partysocket/react";
 
 const COLORS = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"];
-const GRID_SIZE = 10;
+const GRID_SIZE = 30;
 const DEFAULT_COLOR = "#ffffff";
 
 export default function Home() {
@@ -57,9 +57,6 @@ export default function Home() {
       return newGrid;
     });
     
-    // Play sound on local click
-    play();
-    
     // Then send update to server
     socket.send(JSON.stringify({
       type: "update-cell",
@@ -90,6 +87,21 @@ export default function Home() {
   return (
     <div className="min-h-screen p-8 flex flex-col items-center">
       <h1 className="text-2xl font-bold mb-6">Collaborative Grid</h1>
+            
+      <button 
+        onClick={resetGrid}
+        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors font-medium text-black"
+        aria-label="Reset grid to all white"
+      >
+        Reset Grid
+      </button>
+      
+      <div className="mt-6 text-sm text-gray-500 my-2">
+        {socket.readyState === WebSocket.OPEN ? 
+          <span className="text-green-500">● Connected</span> : 
+          <span className="text-red-500">● Disconnected</span>
+        }
+      </div>
       
       <div className="flex gap-4 mb-6">
         {COLORS.map(color => (
@@ -118,21 +130,7 @@ export default function Home() {
           ))
         )}
       </div>
-      
-      <button 
-        onClick={resetGrid}
-        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors font-medium"
-        aria-label="Reset grid to all white"
-      >
-        Reset Grid
-      </button>
-      
-      <div className="mt-6 text-sm text-gray-500">
-        {socket.readyState === WebSocket.OPEN ? 
-          <span className="text-green-500">● Connected</span> : 
-          <span className="text-red-500">● Disconnected</span>
-        }
-      </div>
+
     </div>
   );
 }
