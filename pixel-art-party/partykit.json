@@ -1,0 +1,10 @@
+{
+  "$schema": "https://www.partykit.io/schema.json",
+  "name": "pixel-art-party",
+  "main": "src/server.ts",
+  "compatibilityDate": "2025-03-03",
+  "serve": {
+    "path": "public",
+    "build": "src/client.ts"
+  }
+}
