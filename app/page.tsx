@@ -24,7 +24,7 @@ export default function Home() {
   }, [grid.length]);
 
   const socket = usePartySocket({
-    host: "localhost:1999", // Update for production
+    host: process.env.NEXT_PUBLIC_PARTYKIT_SERVER_URL, // Update for production
     room: "default-room",
     onMessage(event) {
       const data = JSON.parse(event.data);
