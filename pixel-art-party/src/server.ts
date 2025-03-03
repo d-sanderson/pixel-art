@@ -1,10 +1,11 @@
 import type * as Party from "partykit/server";
 
-const GRID_SIZE = 30; // Match client size
+const GRID_SIZE = 30;
 const DEFAULT_COLOR = "#ffffff";
 
 export default class GridServer implements Party.Server {
   grid: string[][] = [];
+  connections: Set<string> = new Set();
 
   constructor(readonly room: Party.Room) {
     // Initialize grid properly when server starts
@@ -18,16 +19,35 @@ export default class GridServer implements Party.Server {
     );
   }
 
+  // Broadcast the current user count to all connections
+  private broadcastUserCount() {
+    const count = this.connections.size;
+    this.room.broadcast(JSON.stringify({
+      type: "user-count-updated",
+      count
+    }));
+  }
+
   onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
     console.log(`New connection ${conn.id} in room ${this.room.id}`);
+    
+    // Add connection to our tracking set
+    this.connections.add(conn.id);
     
     // Initialize grid if empty (defensive check)
     if (this.grid.length === 0) {
       this.initializeGrid();
     }
     
-    // Send initial grid state to new connection
-    conn.send(JSON.stringify({ type: "init", grid: this.grid }));
+    // Send initial grid state to new connection with user count
+    conn.send(JSON.stringify({ 
+      type: "init", 
+      grid: this.grid,
+      userCount: this.connections.size
+    }));
+    
+    // Broadcast updated user count to all connections
+    this.broadcastUserCount();
   }
 
   onMessage(message: string, sender: Party.Connection) {
@@ -77,14 +97,13 @@ export default class GridServer implements Party.Server {
     }
   }
 
-  // Optional: Persist state when server shuts down
-  async onClose(): Promise<void> {
-    try {
-      // You could save the grid state to storage here
-      console.log("Server for room", this.room.id, "is closing");
-    } catch (error) {
-      console.error("Error during server shutdown:", error);
-    }
+  onClose(conn: Party.Connection) {
+    // Remove connection from our tracking set
+    this.connections.delete(conn.id);
+    console.log(`Connection ${conn.id} closed`);
+    
+    // Broadcast updated user count
+    this.broadcastUserCount();
   }
 }
 

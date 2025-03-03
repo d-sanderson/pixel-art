@@ -10,6 +10,7 @@ const DEFAULT_COLOR = "#ffffff";
 export default function Home() {
   const [selectedColor, setSelectedColor] = useState(COLORS[0]);
   const [grid, setGrid] = useState<string[][]>([]);
+  const [connectedUsers, setConnectedUsers] = useState(1); // Default to 1 (self)
   const [play] = useSound("/pop.mp3");
 
   // Create initial empty grid if none exists
@@ -31,6 +32,9 @@ export default function Home() {
 
       if (data.type === "init") {
         setGrid(data.grid);
+        if (data.userCount !== undefined) {
+          setConnectedUsers(data.userCount);
+        }
       } else if (data.type === "cell-updated") {
         setGrid(prev => {
           const newGrid = JSON.parse(JSON.stringify(prev)); // Deep copy to ensure re-render
@@ -45,6 +49,8 @@ export default function Home() {
         );
         setGrid(resetGrid);
         play();
+      } else if (data.type === "user-count-updated") {
+        setConnectedUsers(data.count);
       }
     },
   });
@@ -88,19 +94,30 @@ export default function Home() {
     <div className="min-h-screen p-8 flex flex-col items-center">
       <h1 className="text-2xl font-bold mb-6">Collaborative Grid</h1>
             
-      <button 
-        onClick={resetGrid}
-        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors font-medium text-black"
-        aria-label="Reset grid to all white"
-      >
-        Reset Grid
-      </button>
-      
-      <div className="mt-6 text-sm text-gray-500 my-2">
-        {socket.readyState === WebSocket.OPEN ? 
-          <span className="text-green-500">● Connected</span> : 
-          <span className="text-red-500">● Disconnected</span>
-        }
+      <div className="flex items-center gap-4 mb-6">
+        <button 
+          onClick={resetGrid}
+          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors font-medium text-black"
+          aria-label="Reset grid to all white"
+        >
+          Reset Grid
+        </button>
+        
+        <div className="flex items-center gap-2">
+          <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            {connectedUsers} {connectedUsers === 1 ? 'user' : 'users'} online
+          </div>
+          
+          <div className="text-sm">
+            {socket.readyState === WebSocket.OPEN ? 
+              <span className="text-green-500">● Connected</span> : 
+              <span className="text-red-500">● Disconnected</span>
+            }
+          </div>
+        </div>
       </div>
       
       <div className="flex gap-4 mb-6">
@@ -130,7 +147,6 @@ export default function Home() {
           ))
         )}
       </div>
-
     </div>
   );
 }
