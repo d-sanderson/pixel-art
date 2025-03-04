@@ -13,6 +13,16 @@ export default function Home() {
   const [connectedUsers, setConnectedUsers] = useState(1); // Default to 1 (self)
   const [play] = useSound("/pop.mp3");
 
+  const handlePlaySound = () => {
+    // Generate random playback rate between 0.8 and 1.2
+    const randomRate = Math.random() * 0.4 + 0.8;
+    
+    // Play sound with the random pitch
+    play({
+      playbackRate: randomRate,
+      // You can add other dynamic options here too
+    });
+  };
   // Create initial empty grid if none exists
   useEffect(() => {
     if (grid.length === 0) {
@@ -41,14 +51,14 @@ export default function Home() {
           newGrid[data.row][data.col] = data.color;
           return newGrid;
         });
-        play();
+        handlePlaySound();
       } else if (data.type === "grid-reset") {
         // Reset grid when receiving reset message from server
         const resetGrid = Array(GRID_SIZE).fill(null).map(() => 
           Array(GRID_SIZE).fill(DEFAULT_COLOR)
         );
         setGrid(resetGrid);
-        play();
+        handlePlaySound();
       } else if (data.type === "user-count-updated") {
         setConnectedUsers(data.count);
       }
@@ -80,7 +90,7 @@ export default function Home() {
     setGrid(resetGrid);
     
     // Play sound for feedback
-    play();
+    handlePlaySound();
     
     // Send reset command to server
     socket.send(JSON.stringify({
